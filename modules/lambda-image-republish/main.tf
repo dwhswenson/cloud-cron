@@ -95,9 +95,11 @@ resource "null_resource" "republish_image" {
     command     = <<-EOC
       set -euo pipefail
       # Isolate registry credentials from the host keychain in a temporary Docker config.
-      # Preserve the daemon endpoint before hiding contexts, and seed auths to prevent
-      # Docker from auto-detecting a host credential helper.
-      if [[ -z "$${DOCKER_HOST:-}" ]]; then
+      # Preserve the selected daemon endpoint before hiding contexts, and seed auths
+      # to prevent Docker from auto-detecting a host credential helper.
+      if [[ -n "$${DOCKER_CONTEXT:-}" ]]; then
+        DOCKER_HOST="$(docker context inspect "$DOCKER_CONTEXT" --format '{{.Endpoints.docker.Host}}')"
+      elif [[ -z "$${DOCKER_HOST:-}" ]]; then
         DOCKER_HOST="$(docker context inspect --format '{{.Endpoints.docker.Host}}')"
       fi
       export DOCKER_HOST
